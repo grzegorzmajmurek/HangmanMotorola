@@ -27,14 +27,16 @@ namespace Task
             static string PlayGame()
             {
                 var logger = new Logger();
+                var game = new Game(DateTime.UtcNow);
+                var ascii = new AsciiArt();
 
-                const int live = 5;
+                
                 ConsoleKeyInfo yesNo = new ConsoleKeyInfo();
-
                 CountryAndCapitals countryAndCapitals = new CountryAndCapitals("./countries_and_capitals.txt");
                 countryAndCapitals.FetchCountriesAndCapitals();
                 countryAndCapitals.SelectRandomCountryAndCapital();
 
+                const int live = 5;
                 Word word = new Word(countryAndCapitals.selectedCountryAndCapital.Value, live, false);
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -45,13 +47,15 @@ namespace Task
                 logger.Log("\n");
                 logger.Log($"You have {live} live");
                 Console.ForegroundColor = ConsoleColor.White;
-                var game = new Game(DateTime.UtcNow);
-                while (Result() == GameResult.Continue)
+                
+                while (game.Result(word) == GameResult.Continue)
                 {
+                    logger.Log($"{ascii.HangMan(word.livesToGuessWord + 1)}");
                     if (word.livesToGuessWord == 1)
                     {
                         logger.Log($"The capital of {countryAndCapitals.selectedCountryAndCapital.Key}");
                     }
+
                     logger.Log("Would You like write a letter or whole word? \n L - if you select letter, another letter - if word");
                     var letterOrWord = Console.ReadLine();
                     var isLetterSelected = word.IsLetterSelected(letterOrWord);
@@ -66,9 +70,10 @@ namespace Task
                         word.ManageSelectedWord(input);
                     }
                 }
-                if (Result() == GameResult.Lose)
+
+                if (game.Result(word) == GameResult.Lose)
                 {
-                    logger.Log($"You guessed the capital after {word.letterGuessed.Count} letters. It took you {game.gameDuration().TotalSeconds} seconds");
+                    logger.Log($"You guessed {word.letterGuessed.Count} letters in capital word. It took you {game.GameDuration().TotalSeconds} seconds");
                     logger.Log("Do you want to play again ? Y / N");
                     yesNo = Console.ReadKey();
 
@@ -81,25 +86,15 @@ namespace Task
                 {
                     logger.Log("You won!");
                     logger.Log("Please, write your name:");
+
                     var name = Console.ReadLine();
-                    File.AppendAllText("ScoreGame.txt", $"{name} | {DateTime.UtcNow} | {game.gameDuration().TotalSeconds} \n");
+                    game.WriteResultToFile(name);
+
+                    logger.Log($"The best scores: ");
+                    game.FetchTheBestResultList().ForEach((result) => logger.Log(result));
                     logger.Log("Do you want to play again ? Y/N");
                     yesNo = Console.ReadKey();
                     return yesNo.KeyChar.ToString();
-                }
-                GameResult Result()
-                {
-
-                    if (word.livesToGuessWord <= 0)
-                    {
-                        return GameResult.Lose;
-                    }
-                    else if (word.isCorrectWord)
-                    {
-                        return GameResult.Win;
-                    }
-                    else
-                        return GameResult.Continue;
                 }
             }
         }

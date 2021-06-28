@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace HangmanMotorola
 {
@@ -35,7 +34,7 @@ namespace HangmanMotorola
         {
             var Logger = new Logger();
             var isOneLetter = letter.Length == 1;
-            var isImplicitIn = selectedWord.ToLower().Contains(letter.ToLower());
+            var isImplicitIn = selectedWord.Contains(letter, StringComparison.InvariantCultureIgnoreCase);
             if (isImplicitIn && isOneLetter)
                 Logger.Log("Congratulation, This letter is correct!");
             else
@@ -48,13 +47,10 @@ namespace HangmanMotorola
             var logger = new Logger();
             bool isLetterSelected = input.ToLower() == 'l'.ToString();
             if (isLetterSelected)
-            {
                 logger.Log("Write a letter:");
-            }
             else
-            {
                 logger.Log("Write a whole word:");
-            }
+
             return isLetterSelected;
         }
 
@@ -69,13 +65,11 @@ namespace HangmanMotorola
                 {
                     isCorrectWord = true;
                 }
-
             }
             else
             {
                 livesToGuessWord -= 1;
-                if (input.Length != 1)
-                    return;
+                if (input.Length != 1) { return; }
                 letterNotInWord.Add(input);
                 logger.Log("Not in word:");
                 letterNotInWord.ForEach(letter => logger.Log($"* {letter}"));
